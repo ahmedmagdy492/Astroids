@@ -1,9 +1,18 @@
 #pragma once
 
-#define WIDTH 1024
-#define HEIGHT 768
+#define WIDTH 1920
+#define HEIGHT 1080
 
-#define PLAYER_ROT_DEG 15.0f
+#define PLAYER_ROT_DEG 25.0f
 #define PLAYER_BASE_WIDTH 35
 #define PLAYER_TRI_HEIGHT 50
-#define PLAYER_SPEED 10.0f
+#define PLAYER_VEL_X 10.0f
+#define PLAYER_VEL_Y 10.0f
+#define PLYAER_MAX_SPEED 20.0f
+#define PLAYER_SPEED 1.0f
+
+#define MAX_ASTROID_RADIUS 40.0f
+#define NO_OF_POINTS_IN_ASTROID 8
+#define ASTROID_SPEED 2.0f
+#define ASTROIDS_POOL_SIZE 100
+#define ASTROIDS_SIZE 35

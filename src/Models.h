@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <stack>
 #include <iostream>
 #include <cmath>
 
@@ -12,6 +13,14 @@ extern "C" {
 #endif
 
 #include "Shared.h"
+
+enum PlayerOffScreenDirection : unsigned char {
+	PlayerOffNone,
+	PlayerOffWidth,
+	PlayerOffZeroX,
+	PlayerOffHeight,
+	PlayerOffZeroY
+};
 
 class Utils {
 public:
@@ -40,24 +49,13 @@ public:
 		float len = GetVectorLength(originalVec);
 		return { vec.x * len, vec.y * len, vec.z * len };
 	}
-
-	static Vector3 MultiplyVectorWithMatrix(Vector3 vec, Matrix mat) {
-		Quaternion quat = { vec.x, vec.y, vec.z, 1 };
-		Quaternion result = {};
-
-		result.x = quat.x * mat.m0 + quat.y * mat.m4 + quat.z * mat.m8 + quat.w * mat.m12;
-		result.y = quat.x * mat.m1 + quat.y * mat.m5 + quat.z * mat.m9 + quat.w * mat.m13;
-		result.z = quat.x * mat.m2 + quat.y * mat.m6 + quat.z * mat.m10 + quat.w * mat.m14;
-		result.w = quat.x * mat.m3 + quat.y * mat.m7 + quat.z * mat.m11 + quat.w * mat.m15;
-
-		return { result.x, result.y, result.z };
-	}
 };
 
 class Player {
 private:
 	Vector3 middlePosition, leftPosition, rightPosition;
 	float rotationAngle;
+	Vector3 curVelocity;
 
 public:
 	Player();
@@ -68,12 +66,43 @@ public:
 	Vector3 GetPosition() const;
 	void SetPosition(Vector3 newPos);
 
+	Vector3 GetVelocity() const;
+	void SetVelocity(Vector3 newVel);
+
 	void RotatePlayer(float angle);
 	void Move(Vector3 translateVector);
+	PlayerOffScreenDirection IsPlayerOffScreen(int width, int height);
 
 	void Draw();
 };
 
+class Astroid {
+private:
+	float maxShapeRadius;
+	float pointsRadiuses[NO_OF_POINTS_IN_ASTROID] = {0.0f};
+	Vector3 centerPoint;
+	Vector3 points[NO_OF_POINTS_IN_ASTROID] = { 0.0f };
+	Color color;
+	bool isMoving = false;
+
+	void ArrangePointsPositionsBasedOnCenterPoint();
+
+public:
+	Astroid(Vector3 centerPoint);
+
+	Vector3* GetPosition() const;
+
+	void ToggleIsMoving();
+
+	bool IsMoving() const;
+
+	void Draw();
+	void Move(Vector3 translateVector);
+
+	void ResetCenterPoint(Vector3 newCenterPoint);
+
+	~Astroid();
+};
 
 class Scene {
 protected:
@@ -104,6 +133,9 @@ class GameScene : public Scene {
 private:
 	Player player;
 	SceneManager* sceneManager;
+	std::vector<Astroid*> astroids;
+	unsigned double elapsedSeconds = 0.0;
+
 public:
 	GameScene(SceneManager* sceneManager);
 
@@ -111,4 +143,6 @@ public:
 
 	void Render();
 	void Update();
+
+	~GameScene();
 };
