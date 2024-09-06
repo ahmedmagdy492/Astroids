@@ -24,6 +24,17 @@ enum PlayerOffScreenDirection : unsigned char {
 
 class Utils {
 public:
+	static bool IsPositionOffScreen(Vector3 position, int width, int height) {
+		if (position.x < 0 || position.x > width) {
+			return true;
+		}
+		if (position.y < 0 || position.y > height) {
+			return true;
+		}
+
+		return false;
+	}
+
 	static double ConvertDegreesToRadians(int deg)
 	{
 		return deg * (PI / 180.0f);
@@ -93,6 +104,25 @@ public:
 	void Draw();
 };
 
+class Bullet {
+private:
+	Vector3 position;
+	Color color;
+	float rotationAngle;
+
+public:
+	Bullet(Vector3 position, float rotationAngle, Color color);
+
+	Vector3 GetPosition();
+	float GetRotationAngle();
+	void SetRotationAngle(float newAngle);
+
+	void Move(Vector3 velocity);
+	void Draw();
+
+	void ResetPosition(Vector3 position);
+};
+
 class Astroid {
 private:
 	float pointsRadiuses[NO_OF_POINTS_IN_ASTROID] = {0.0f};
@@ -111,6 +141,8 @@ public:
 	void ToggleIsMoving();
 
 	bool IsPointInsidePolygon(Vector3 middlePosition, Vector3* points);
+
+	bool IsCollidingWithBullet(Bullet* bullet);
 
 	bool IsMoving() const;
 
@@ -158,9 +190,14 @@ private:
 	Player player;
 	SceneManager* sceneManager;
 	std::vector<Astroid*> astroids;
+	std::stack<Astroid*> astroidsToRemove;
+	std::stack<Bullet*> bulletsPool;
+	std::stack<Bullet*> bulletsToRemove;
+	std::vector<Bullet*> bullets;
 	double elapsedSeconds = 0.0;
 	bool isPlayerCollided = false;
 	bool isGameOver = false;
+	float shootingAngle = 0.0f;
 
 public:
 	GameScene(SceneManager* sceneManager);

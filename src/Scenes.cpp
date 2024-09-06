@@ -10,6 +10,14 @@ GameScene::GameScene(SceneManager* sceneManager) : Scene("GameScene") {
 		Astroid* astroid = new Astroid(shapeCenterPoint);
 		astroids.push_back(astroid);
 	}
+
+	for (int i = 0; i < BULLET_POOL_SIZE; ++i) {
+		Color color = { 
+			GetRandomValue(100, 255), GetRandomValue(100, 255), GetRandomValue(100, 255),
+			GetRandomValue(50, 255)
+		};
+		bulletsPool.push(new Bullet({-100.0f, -100.0f}, shootingAngle, color));
+	}
 }
 
 const std::string& GameScene::GetName() const {
@@ -17,6 +25,31 @@ const std::string& GameScene::GetName() const {
 }
 
 void GameScene::Render() {
+	while (bulletsToRemove.size() > 0) {
+		Bullet* bullet = bulletsToRemove.top();
+		bulletsToRemove.pop();
+		std::vector<Bullet*>::iterator result = std::find(bullets.begin(), bullets.end(), bullet);
+		if (result != bullets.end()) {
+			bullets.erase(result);
+		}
+	}
+
+	while (astroidsToRemove.size() > 0) {
+		Astroid* astroid = astroidsToRemove.top();
+		astroidsToRemove.pop();
+		std::vector<Astroid*>::iterator result = std::find(astroids.begin(), astroids.end(), astroid);
+		if (result != astroids.end()) {
+			astroids.erase(result);
+		}
+	}
+
+	for (int i = 0; i < bullets.size(); ++i) {
+		Vector3 position = bullets[i]->GetPosition();
+		if (!Utils::IsPositionOffScreen(position, WIDTH, HEIGHT)) {
+			bullets[i]->Draw();
+		}
+	}
+
 	player.Draw();
 
 	for (int i = 0; i < ASTROIDS_SIZE; ++i) {
@@ -28,7 +61,7 @@ void GameScene::Render() {
 	DrawUI();
 
 	if (isGameOver) {
-		const char* gameOverText = "Game Over";
+		const char* gameOverText = "Game Over ";
 		Font font = *(sceneManager->GetFont());
 		Vector2 size = MeasureTextEx(font, gameOverText, 70.0f, 0.0f);
 		DrawTextEx(font, gameOverText, { (WIDTH - size.x)/2, (HEIGHT - size.y)/2}, 70.0f, 0.0f, WHITE);
@@ -44,11 +77,28 @@ void GameScene::ResetScene() {
 	isPlayerCollided = false;
 	player.ResetState();
 
-	for (int i = 0; i < ASTROIDS_POOL_SIZE; ++i) {
+	for (int i = 0; i < astroids.size(); ++i) {
 		int x = GetRandomValue(MAX_ASTROID_RADIUS - 100.0f, WIDTH + 100.0f);
 		int y = GetRandomValue(-1050.0f, MAX_ASTROID_RADIUS);
 		Vector3 shapeCenterPoint = { (float)x, (float)y, 0.0f };
 		astroids[i]->ResetCenterPoint(shapeCenterPoint);
+	}
+
+	for (int i = 0; i < bullets.size(); ++i) {
+		Bullet* bullet = bullets[bullets.size() - 1];
+		if (bullet) {
+			bullets.pop_back();
+			bullet->ResetPosition({ -100.0f, -100.0f, 0.0f });
+			bulletsPool.push(bullet);
+		}
+	}
+
+	while (bulletsToRemove.size() > 0) {
+		bulletsToRemove.pop();
+	}
+
+	while (astroidsToRemove.size() > 0) {
+		astroidsToRemove.pop();
 	}
 }
 
@@ -58,9 +108,11 @@ void GameScene::Update() {
 
 		if (IsKeyPressed(KEY_RIGHT)) {
 			player.RotatePlayer(PLAYER_ROT_DEG);
+			shootingAngle = player.GetRotationAngle();
 		}
 		if (IsKeyPressed(KEY_LEFT)) {
 			player.RotatePlayer(-PLAYER_ROT_DEG);
+			shootingAngle = player.GetRotationAngle();
 		}
 		if (IsKeyDown(KEY_UP)) {
 			float angleInRadians = Utils::ConvertDegreesToRadians(curRotAngle);
@@ -109,6 +161,14 @@ void GameScene::Update() {
 				}
 			}
 		}
+		if (IsKeyPressed(KEY_SPACE)) {
+			Vector3 playerPos = player.GetPosition();
+		 	Bullet* bullet = bulletsPool.top();
+			bulletsPool.pop();
+			bullet->ResetPosition({playerPos.x, playerPos.y - 10, 0.0f});
+			bullet->SetRotationAngle(shootingAngle);
+			bullets.push_back(bullet);
+		}
 
 		// astroids moving
 		for (int i = 0; i < ASTROIDS_SIZE; ++i) {
@@ -138,6 +198,41 @@ void GameScene::Update() {
 				}
 				else {
 					isGameOver = true;
+				}
+			}
+		}
+
+		// bullets moving
+		for (int i = 0; i < bullets.size(); ++i) {
+			float angleInRadians = Utils::ConvertDegreesToRadians(bullets[i]->GetRotationAngle());
+			Vector3 position = bullets[i]->GetPosition();
+			Vector3 dirVec = { cosf(angleInRadians) * BULLET_X_SPEED, sinf(angleInRadians) * BULLET_Y_SPEED, 0.0f };
+			bullets[i]->Move({ dirVec.x * -1, dirVec.y * -1, dirVec.z });
+
+			// check for collision with any astroid
+			bool hasBulletCollidedWithAstroid = false;
+			for (int j = 0; j < ASTROIDS_SIZE; ++j) {
+				if (astroids[j]->IsCollidingWithBullet(bullets[i])) {
+					player.SetScore(player.GetScore() + 1);
+					bulletsToRemove.push(bullets[i]);
+					astroidsToRemove.push(astroids[j]);
+					hasBulletCollidedWithAstroid = true;
+					break;
+				}
+			}
+
+			if (!hasBulletCollidedWithAstroid) {
+				// check if the bullet is off the screen and if so remove it from
+				// bullets list and add it to bulletsPool
+				Vector3 bulletPos = bullets[i]->GetPosition();
+				if (
+					Utils::IsPositionOffScreen(bulletPos, WIDTH, HEIGHT) ||
+					Utils::IsPositionOffScreen({ bulletPos.x + BULLET_SIZE, bulletPos.y, bulletPos.z }, WIDTH, HEIGHT) ||
+					Utils::IsPositionOffScreen({ bulletPos.x, bulletPos.y + BULLET_SIZE, bulletPos.z }, WIDTH, HEIGHT) ||
+					Utils::IsPositionOffScreen({ bulletPos.x + BULLET_SIZE, bulletPos.y + BULLET_SIZE, bulletPos.z }, WIDTH, HEIGHT)
+					) {
+					bullets[i]->ResetPosition({ -100.0f, -100.0f, 0.0f });
+					bulletsToRemove.push(bullets[i]);
 				}
 			}
 		}
@@ -182,6 +277,15 @@ GameScene::~GameScene() {
 		delete astroids[i];
 	}
 	astroids.clear();
+
+	for (int i = 0; i < bulletsPool.size(); ++i) {
+		delete bulletsPool.top();
+		bulletsPool.pop();
+	}
+
+	for (int i = 0; i < bullets.size(); ++i) {
+		delete bullets[i];
+	}
 }
 
 MenuScene::MenuScene(SceneManager* sceneManager) : Scene("MenuScene"), sceneManager(sceneManager) {

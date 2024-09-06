@@ -221,6 +221,68 @@ void Astroid::ResetCenterPoint(Vector3 newCenterPoint) {
 	ArrangePointsPositionsBasedOnCenterPoint();
 }
 
+bool Astroid::IsCollidingWithBullet(Bullet* bullet) {
+	float longestAstroidRadius = INT_MIN;
+	for (int i = 0; i < NO_OF_POINTS_IN_ASTROID; ++i) {
+		if (pointsRadiuses[i] > longestAstroidRadius) {
+			longestAstroidRadius = pointsRadiuses[i];
+		}
+	}
+
+	Vector3 bulletPos = bullet->GetPosition();
+	Vector3 topLeftBulletPoint = { bulletPos.x, bulletPos.y, 0.0f };
+	Vector3 topRightBulletPoint = { bulletPos.x + BULLET_SIZE, bulletPos.y, 0.0f };
+	Vector3 bottomLeftBulletPoint = { bulletPos.x, bulletPos.y + BULLET_SIZE, 0.0f };
+	Vector3 bottomRightBulletPoint = { bulletPos.x + BULLET_SIZE, bulletPos.y + BULLET_SIZE, 0.0f };
+
+	float distBetweenCPAndTLP = Utils::DistanceBetween(centerPoint, topLeftBulletPoint);
+	if (distBetweenCPAndTLP < longestAstroidRadius) {
+		return true;
+	}
+	float distBetweenCPAndTRP = Utils::DistanceBetween(centerPoint, topRightBulletPoint);
+	if (distBetweenCPAndTRP < longestAstroidRadius) {
+		return true;
+	}
+	float distBetweenCPAndrBLP = Utils::DistanceBetween(centerPoint, bottomLeftBulletPoint);
+	if (distBetweenCPAndrBLP < longestAstroidRadius) {
+		return true;
+	}
+	float distBetweenCPAndrBRP = Utils::DistanceBetween(centerPoint, bottomRightBulletPoint);
+	if (distBetweenCPAndrBRP < longestAstroidRadius) {
+		return true;
+	}
+
+	return false;
+}
+
 Astroid::~Astroid() {
 
+}
+
+Bullet::Bullet(Vector3 position, float rotationAngle, Color color) : color(color), rotationAngle(rotationAngle), position(position) {
+}
+
+float Bullet::GetRotationAngle() {
+	return rotationAngle;
+}
+
+void Bullet::SetRotationAngle(float newAngle) {
+	rotationAngle = newAngle;
+}
+
+Vector3 Bullet::GetPosition() {
+	return position;
+}
+
+void Bullet::Move(Vector3 velocity) {
+	Matrix translateMat = MatrixTranslate(velocity.x, velocity.y, velocity.z);
+	position = Vector3Transform(position, translateMat);
+}
+
+void Bullet::Draw() {
+	DrawRectangle(position.x, position.y, BULLET_SIZE, BULLET_SIZE, color);
+}
+
+void Bullet::ResetPosition(Vector3 position) {
+	this->position = position;
 }
