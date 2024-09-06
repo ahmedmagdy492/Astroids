@@ -3,6 +3,11 @@
 GameScene::GameScene(SceneManager* sceneManager) : Scene("GameScene") {
 	this->sceneManager = sceneManager;
 
+	fireSound = LoadSound("resources/fire.wav");
+	thrustSound = LoadSound("resources/thrust.wav");
+	bangSmallSound = LoadSound("resources/bangSmall.wav");
+	bangMediumSound = LoadSound("resources/bangMedium.wav");
+
 	for (int i = 0; i < ASTROIDS_POOL_SIZE; ++i) {
 		int x = GetRandomValue(MAX_ASTROID_RADIUS - 100.0f, WIDTH + 100.0f);
 		int y = GetRandomValue(-1050.0f, MAX_ASTROID_RADIUS);
@@ -115,6 +120,7 @@ void GameScene::Update() {
 			shootingAngle = player.GetRotationAngle();
 		}
 		if (IsKeyDown(KEY_UP)) {
+			PlaySound(thrustSound);
 			float angleInRadians = Utils::ConvertDegreesToRadians(curRotAngle);
 			Vector3 curPlayerVelocity = player.GetVelocity();
 			if (curPlayerVelocity.x < PLYAER_MAX_SPEED && curPlayerVelocity.y < PLYAER_MAX_SPEED) {
@@ -162,6 +168,7 @@ void GameScene::Update() {
 			}
 		}
 		if (IsKeyPressed(KEY_SPACE)) {
+			PlaySound(fireSound);
 			Vector3 playerPos = player.GetPosition();
 		 	Bullet* bullet = bulletsPool.top();
 			bulletsPool.pop();
@@ -191,6 +198,7 @@ void GameScene::Update() {
 			if (!isPlayerCollided && astroids[i]->IsCollidingWithPlayer(player)) {
 				unsigned char playerLives = player.GetLivesNo();
 				if (playerLives > 0) {
+					PlaySound(bangMediumSound);
 					isPlayerCollided = true;
 					--playerLives;
 					player.SetLivesNo(playerLives);
@@ -213,6 +221,7 @@ void GameScene::Update() {
 			bool hasBulletCollidedWithAstroid = false;
 			for (int j = 0; j < ASTROIDS_SIZE; ++j) {
 				if (astroids[j]->IsCollidingWithBullet(bullets[i])) {
+					PlaySound(bangSmallSound);
 					player.SetScore(player.GetScore() + 1);
 					bulletsToRemove.push(bullets[i]);
 					astroidsToRemove.push(astroids[j]);
@@ -273,6 +282,7 @@ void GameScene::DrawUI() const {
 }
 
 GameScene::~GameScene() {
+
 	for (int i = 0; i < astroids.size(); ++i) {
 		delete astroids[i];
 	}
@@ -286,6 +296,11 @@ GameScene::~GameScene() {
 	for (int i = 0; i < bullets.size(); ++i) {
 		delete bullets[i];
 	}
+
+	UnloadSound(fireSound);
+	UnloadSound(thrustSound);
+	UnloadSound(bangSmallSound);
+	UnloadSound(bangMediumSound);
 }
 
 MenuScene::MenuScene(SceneManager* sceneManager) : Scene("MenuScene"), sceneManager(sceneManager) {

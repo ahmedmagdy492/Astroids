@@ -199,6 +199,11 @@ private:
 	bool isGameOver = false;
 	float shootingAngle = 0.0f;
 
+	Sound fireSound;
+	Sound thrustSound;
+	Sound bangSmallSound;
+	Sound bangMediumSound;
+
 public:
 	GameScene(SceneManager* sceneManager);
 
