@@ -10,6 +10,7 @@
 #define PLAYER_VEL_Y 10.0f
 #define PLYAER_MAX_SPEED 20.0f
 #define PLAYER_SPEED 1.0f
+#define PLAYER_LIVES 3
 
 #define MAX_ASTROID_RADIUS 40.0f
 #define NO_OF_POINTS_IN_ASTROID 8

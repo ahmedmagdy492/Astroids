@@ -33,6 +33,10 @@ public:
 		return RAD2DEG * angleInRad;
 	}
 
+	static float DistanceBetween(Vector3 point1, Vector3 point2) {
+		return sqrtf((point2.x - point1.x) * (point2.x - point1.x) + (point2.y - point1.y) * (point2.y - point1.y));
+	}
+
 	static float GetVectorLength(Vector3 v) {
 		return sqrtf((v.x * v.x) + (v.y * v.y) + (v.z * v.z));
 	}
@@ -56,6 +60,8 @@ private:
 	Vector3 middlePosition, leftPosition, rightPosition;
 	float rotationAngle;
 	Vector3 curVelocity;
+	unsigned char lives = PLAYER_LIVES;
+	unsigned short score = 0;
 
 public:
 	Player();
@@ -63,8 +69,17 @@ public:
 	float GetRotationAngle() const;
 	void SetRotationAngle(float newAngle);
 
+	int GetScore() const;
+	void SetScore(unsigned int newScore);
+
+	int GetLivesNo() const;
+	void SetLivesNo(unsigned char newLives);
+
 	Vector3 GetPosition() const;
 	void SetPosition(Vector3 newPos);
+
+	Vector3 GetLeftPosition() const;
+	Vector3 GetRightPosition() const;
 
 	Vector3 GetVelocity() const;
 	void SetVelocity(Vector3 newVel);
@@ -73,12 +88,13 @@ public:
 	void Move(Vector3 translateVector);
 	PlayerOffScreenDirection IsPlayerOffScreen(int width, int height);
 
+	void ResetState();
+
 	void Draw();
 };
 
 class Astroid {
 private:
-	float maxShapeRadius;
 	float pointsRadiuses[NO_OF_POINTS_IN_ASTROID] = {0.0f};
 	Vector3 centerPoint;
 	Vector3 points[NO_OF_POINTS_IN_ASTROID] = { 0.0f };
@@ -94,7 +110,11 @@ public:
 
 	void ToggleIsMoving();
 
+	bool IsPointInsidePolygon(Vector3 middlePosition, Vector3* points);
+
 	bool IsMoving() const;
+
+	bool IsCollidingWithPlayer(const Player& player);
 
 	void Draw();
 	void Move(Vector3 translateVector);
@@ -120,10 +140,14 @@ class SceneManager {
 private:
 	Scene* currentActiveScene = nullptr;
 	std::unordered_map<std::string, Scene*> scenes;
+	Font* font;
 
 public:
-	SceneManager();
+	bool shouldExit = false;
+
+	SceneManager(Font* font);
 	void SetActiveSceneByName(const std::string& name);
+	Font* GetFont() const;
 	void ProcessInput();
 	void RenderActiveScene();
 	~SceneManager();
@@ -134,15 +158,38 @@ private:
 	Player player;
 	SceneManager* sceneManager;
 	std::vector<Astroid*> astroids;
-	unsigned double elapsedSeconds = 0.0;
+	double elapsedSeconds = 0.0;
+	bool isPlayerCollided = false;
+	bool isGameOver = false;
 
 public:
 	GameScene(SceneManager* sceneManager);
 
 	const std::string& GetName() const;
 
+	void DrawUI() const;
+
 	void Render();
 	void Update();
 
+	void ResetScene();
+
 	~GameScene();
+};
+
+
+class MenuScene : public Scene {
+private:
+	SceneManager* sceneManager;
+
+public:
+	MenuScene(SceneManager* sceneManager);
+
+	const std::string& GetName() const;
+
+
+	void Render();
+	void Update();
+
+	~MenuScene();
 };

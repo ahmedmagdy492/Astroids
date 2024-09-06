@@ -5,12 +5,12 @@ int main() {
 
 	SetTargetFPS(60);
 
-	SceneManager sceneManager;
-
 	Texture2D bgTexture = LoadTexture("resources/bg.png");
+	Font font = LoadFont("resources/game-font.ttf");
 
+	SceneManager sceneManager(&font);
 	
-	while (!WindowShouldClose()) {
+	while (!sceneManager.shouldExit) {
 		ClearBackground(BLACK);
 
 		BeginDrawing();
@@ -23,6 +23,7 @@ int main() {
 		EndDrawing();
 	}
 
+	UnloadFont(font);
 	UnloadTexture(bgTexture);
 
 	CloseWindow();
