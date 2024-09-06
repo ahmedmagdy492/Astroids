@@ -156,6 +156,10 @@ void GameScene::Update() {
 			player.SetLivesNo(PLAYER_LIVES);
 		}
 	}
+
+	if (IsKeyPressed(KEY_ESCAPE)) {
+		sceneManager->SetActiveSceneByName("MenuScene");
+	}
 }
 
 void GameScene::DrawUI() const {
