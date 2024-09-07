@@ -121,6 +121,12 @@ void GameScene::ResetScene() {
 	while (astroidsToRemove.size() > 0) {
 		astroidsToRemove.pop();
 	}
+
+	if (isSaucerOn) {
+		Vector2 saucerSize = saucer.GetSize();
+		saucer.ResetPosition({ -50.0f, (HEIGHT - saucerSize.y) / 2, 0.0f });
+		isSaucerOn = false;
+	}
 }
 
 void GameScene::Generate2Astroids(Astroid* astroid) {
@@ -270,7 +276,6 @@ void GameScene::Update() {
 					isSaucerOn = false;
 					player.SetScore(player.GetScore() + 10);
 					bulletsToRemove.push(bullets[i]);
-
 					break;
 				}
 			}
