@@ -3,7 +3,7 @@
 #define WIDTH 1920
 #define HEIGHT 1080
 
-#define PLAYER_ROT_DEG 25.0f
+#define PLAYER_ROT_DEG 5.0f
 #define PLAYER_BASE_WIDTH 35
 #define PLAYER_TRI_HEIGHT 50
 #define PLAYER_VEL_X 10.0f

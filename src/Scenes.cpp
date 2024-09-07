@@ -17,10 +17,14 @@ GameScene::GameScene(SceneManager* sceneManager) : Scene("GameScene") {
 	}
 
 	for (int i = 0; i < BULLET_POOL_SIZE; ++i) {
-		Color color = { 
+		/*Color color = { 
 			GetRandomValue(100, 255), GetRandomValue(100, 255), GetRandomValue(100, 255),
 			GetRandomValue(50, 255)
+		};*/
+		Color color = {
+			255, 255, 255, 255
 		};
+		shootingAngle = player.GetRotationAngle();
 		bulletsPool.push(new Bullet({-100.0f, -100.0f}, shootingAngle, color));
 	}
 }
@@ -80,6 +84,7 @@ void GameScene::Render() {
 void GameScene::ResetScene() {
 	elapsedSeconds = 0.0;
 	isPlayerCollided = false;
+	shootingAngle = 90.0f;
 	player.ResetState();
 
 	for (int i = 0; i < astroids.size(); ++i) {
@@ -94,6 +99,7 @@ void GameScene::ResetScene() {
 		if (bullet) {
 			bullets.pop_back();
 			bullet->ResetPosition({ -100.0f, -100.0f, 0.0f });
+			bullet->SetRotationAngle(shootingAngle);
 			bulletsPool.push(bullet);
 		}
 	}
@@ -111,16 +117,17 @@ void GameScene::Update() {
 	if (!isGameOver) {
 		float curRotAngle = player.GetRotationAngle();
 
-		if (IsKeyPressed(KEY_RIGHT)) {
+		if (IsKeyDown(KEY_RIGHT)) {
 			player.RotatePlayer(PLAYER_ROT_DEG);
 			shootingAngle = player.GetRotationAngle();
 		}
-		if (IsKeyPressed(KEY_LEFT)) {
+		if (IsKeyDown(KEY_LEFT)) {
 			player.RotatePlayer(-PLAYER_ROT_DEG);
 			shootingAngle = player.GetRotationAngle();
 		}
 		if (IsKeyDown(KEY_UP)) {
 			PlaySound(thrustSound);
+			player.ShowFuel();
 			float angleInRadians = Utils::ConvertDegreesToRadians(curRotAngle);
 			Vector3 curPlayerVelocity = player.GetVelocity();
 			if (curPlayerVelocity.x < PLYAER_MAX_SPEED && curPlayerVelocity.y < PLYAER_MAX_SPEED) {
@@ -138,6 +145,7 @@ void GameScene::Update() {
 			player.Move({ dirVec.x * -1, dirVec.y * -1, 0.0f });
 		}
 		else if (IsKeyUp(KEY_UP)) {
+			player.HideFuel();
 			float angleInRadians = Utils::ConvertDegreesToRadians(curRotAngle);
 			Vector3 curPlayerVelocity = player.GetVelocity();
 
@@ -155,16 +163,7 @@ void GameScene::Update() {
 				player.Move({ dirVec.x * -1, dirVec.y * -1, 0.0f });
 
 				PlayerOffScreenDirection playerOffCondition = player.IsPlayerOffScreen(WIDTH, HEIGHT);
-				switch (playerOffCondition) {
-				case PlayerOffScreenDirection::PlayerOffWidth:
-					break;
-				case PlayerOffScreenDirection::PlayerOffZeroX:
-					break;
-				case PlayerOffScreenDirection::PlayerOffHeight:
-					break;
-				case PlayerOffScreenDirection::PlayerOffZeroY:
-					break;
-				}
+				player.Reposition(playerOffCondition);
 			}
 		}
 		if (IsKeyPressed(KEY_SPACE)) {

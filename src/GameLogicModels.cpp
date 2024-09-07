@@ -7,7 +7,7 @@ Player::Player() : rotationAngle(90), curVelocity({ PLAYER_VEL_X, PLAYER_VEL_Y, 
 }
 
 void Player::ResetState() {
-	rotationAngle = 90;
+	rotationAngle = 90.0f;
 	curVelocity = { PLAYER_VEL_X, PLAYER_VEL_Y, 0.0f };
 	middlePosition = { (WIDTH - PLAYER_BASE_WIDTH) / 2, HEIGHT / 2, 0.0f };
 	rightPosition = { middlePosition.x + (PLAYER_BASE_WIDTH / 2), middlePosition.y + PLAYER_TRI_HEIGHT, 0.0f };
@@ -32,6 +32,31 @@ void Player::SetRotationAngle(float newAngle) {
 
 Vector3 Player::GetPosition() const {
 	return middlePosition;
+}
+
+void Player::Reposition(PlayerOffScreenDirection playerOffCondition) {
+	switch (playerOffCondition) {
+	case PlayerOffScreenDirection::PlayerOffWidth:
+		middlePosition.x = -50;
+		leftPosition.x = -50;
+		rightPosition.x = -50;
+		break;
+	case PlayerOffScreenDirection::PlayerOffZeroX:
+		middlePosition.x = 50;
+		leftPosition.x = 50;
+		rightPosition.x = 50;
+		break;
+	case PlayerOffScreenDirection::PlayerOffHeight:
+		middlePosition.y *= -1;
+		leftPosition.y *= -1;
+		rightPosition.y *= -1;
+		break;
+	case PlayerOffScreenDirection::PlayerOffZeroY:
+		middlePosition.y *= -1;
+		leftPosition.y *= -1;
+		rightPosition.y *= -1;
+		break;
+	}
 }
 
 void Player::SetPosition(Vector3 newPos) {
@@ -85,7 +110,7 @@ void Player::Move(Vector3 translateVector) {
 }
 
 void Player::Draw() {
-	DrawTriangle({ rightPosition.x, rightPosition.y }, { middlePosition.x, middlePosition.y }, { leftPosition.x, leftPosition.y }, GRAY);
+	DrawTriangleLines({ rightPosition.x, rightPosition.y }, { middlePosition.x, middlePosition.y }, { leftPosition.x, leftPosition.y }, GRAY);
 }
 
 int Player::GetLivesNo() const {
@@ -102,6 +127,14 @@ int Player::GetScore() const {
 
 void Player::SetScore(unsigned int newScore) {
 	score = newScore;
+}
+
+void Player::ShowFuel() {
+	showFuel = true;
+}
+
+void Player::HideFuel() {
+	showFuel = false;
 }
 
 PlayerOffScreenDirection Player::IsPlayerOffScreen(int width, int height) {

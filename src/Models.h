@@ -73,6 +73,7 @@ private:
 	Vector3 curVelocity;
 	unsigned char lives = PLAYER_LIVES;
 	unsigned short score = 0;
+	bool showFuel = false;
 
 public:
 	Player();
@@ -83,11 +84,16 @@ public:
 	int GetScore() const;
 	void SetScore(unsigned int newScore);
 
+	void ShowFuel();
+	void HideFuel();
+
 	int GetLivesNo() const;
 	void SetLivesNo(unsigned char newLives);
 
 	Vector3 GetPosition() const;
 	void SetPosition(Vector3 newPos);
+
+	void Reposition(PlayerOffScreenDirection playerOffCond);
 
 	Vector3 GetLeftPosition() const;
 	Vector3 GetRightPosition() const;
@@ -197,7 +203,7 @@ private:
 	double elapsedSeconds = 0.0;
 	bool isPlayerCollided = false;
 	bool isGameOver = false;
-	float shootingAngle = 0.0f;
+	float shootingAngle;
 
 	Sound fireSound;
 	Sound thrustSound;
