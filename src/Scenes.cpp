@@ -40,6 +40,7 @@ void GameScene::Render() {
 		std::vector<Bullet*>::iterator result = std::find(bullets.begin(), bullets.end(), bullet);
 		if (result != bullets.end()) {
 			bullets.erase(result);
+			bulletsPool.push(bullet);
 		}
 	}
 
@@ -252,7 +253,7 @@ void GameScene::Update() {
 					Utils::IsPositionOffScreen({ bulletPos.x, bulletPos.y + BULLET_SIZE, bulletPos.z }, WIDTH, HEIGHT) ||
 					Utils::IsPositionOffScreen({ bulletPos.x + BULLET_SIZE, bulletPos.y + BULLET_SIZE, bulletPos.z }, WIDTH, HEIGHT)
 					) {
-					bullets[i]->ResetPosition({ -100.0f, -100.0f, 0.0f });
+	 				bullets[i]->ResetPosition({ -100.0f, -100.0f, 0.0f });
 					bulletsToRemove.push(bullets[i]);
 				}
 			}
