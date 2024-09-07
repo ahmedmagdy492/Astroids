@@ -184,7 +184,7 @@ public:
 	bool shouldExit = false;
 
 	SceneManager(Font* font);
-	void SetActiveSceneByName(const std::string& name);
+	void SetActiveSceneByName(const std::string& name, bool hideCursor = false);
 	Font* GetFont() const;
 	void ProcessInput();
 	void RenderActiveScene();

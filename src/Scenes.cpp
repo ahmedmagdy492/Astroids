@@ -341,7 +341,7 @@ void MenuScene::Update() {
 		if ((mousePos.x >= ((WIDTH - startGameSize.x) / 2) && mousePos.x <= (((WIDTH - startGameSize.x) / 2) + startGameSize.x)) &&
 			(mousePos.y >= ((HEIGHT - startGameSize.y) / 2) && mousePos.y <= ((HEIGHT - startGameSize.y) / 2) + startGameSize.y)
 			) {
-			sceneManager->SetActiveSceneByName("GameScene");
+			sceneManager->SetActiveSceneByName("GameScene", true);
 		}
 
 		// exit button
@@ -368,9 +368,16 @@ Font* SceneManager::GetFont() const {
 	return font;
 }
 
-void SceneManager::SetActiveSceneByName(const std::string& name) {
+void SceneManager::SetActiveSceneByName(const std::string& name, bool hideCursor) {
 	if (scenes.find(name) != scenes.end()) {
 		currentActiveScene = scenes[name];
+
+		if (hideCursor) {
+			HideCursor();
+		}
+		else {
+			ShowCursor();
+		}
 	}
 }
 
