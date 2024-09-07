@@ -35,28 +35,13 @@ Vector3 Player::GetPosition() const {
 }
 
 void Player::Reposition(PlayerOffScreenDirection playerOffCondition) {
-	switch (playerOffCondition) {
-	case PlayerOffScreenDirection::PlayerOffWidth:
-		middlePosition.x = -50;
-		leftPosition.x = -50;
-		rightPosition.x = -50;
-		break;
-	case PlayerOffScreenDirection::PlayerOffZeroX:
-		middlePosition.x = 50;
-		leftPosition.x = 50;
-		rightPosition.x = 50;
-		break;
-	case PlayerOffScreenDirection::PlayerOffHeight:
-		middlePosition.y *= -1;
-		leftPosition.y *= -1;
-		rightPosition.y *= -1;
-		break;
-	case PlayerOffScreenDirection::PlayerOffZeroY:
-		middlePosition.y *= -1;
-		leftPosition.y *= -1;
-		rightPosition.y *= -1;
-		break;
+	if (playerOffCondition == PlayerOffScreenDirection::PlayerOffWidth) {
+		Move({ -(WIDTH + PLAYER_BASE_WIDTH), 0.0f, 0.0f });
 	}
+	else if (playerOffCondition == PlayerOffScreenDirection::PlayerOffZeroX) {
+		Move({ WIDTH, 0.0f, 0.0f });
+	}
+
 }
 
 void Player::SetPosition(Vector3 newPos) {

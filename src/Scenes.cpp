@@ -85,7 +85,7 @@ void GameScene::ResetScene() {
 	elapsedSeconds = 0.0;
 	isPlayerCollided = false;
 	shootingAngle = 90.0f;
-	player.ResetState();
+	player.ResetState(); 
 
 	for (int i = 0; i < astroids.size(); ++i) {
 		int x = GetRandomValue(MAX_ASTROID_RADIUS - 100.0f, WIDTH + 100.0f);
@@ -143,6 +143,22 @@ void GameScene::Update() {
 			};
 
 			player.Move({ dirVec.x * -1, dirVec.y * -1, 0.0f });
+
+			PlayerOffScreenDirection playerOffCondition = player.IsPlayerOffScreen(WIDTH, HEIGHT);
+
+			if (playerOffCondition == PlayerOffScreenDirection::PlayerOffHeight || playerOffCondition == PlayerOffScreenDirection::PlayerOffZeroY) {
+				unsigned char playerLives = player.GetLivesNo();
+				if (playerLives > 0) {
+					PlaySound(bangMediumSound);
+					isPlayerCollided = true;
+					--playerLives;
+					player.SetLivesNo(playerLives);
+					ResetScene();
+				}
+			}
+			else {
+				player.Reposition(playerOffCondition);
+			}
 		}
 		else if (IsKeyUp(KEY_UP)) {
 			player.HideFuel();
@@ -161,9 +177,6 @@ void GameScene::Update() {
 				};
 
 				player.Move({ dirVec.x * -1, dirVec.y * -1, 0.0f });
-
-				PlayerOffScreenDirection playerOffCondition = player.IsPlayerOffScreen(WIDTH, HEIGHT);
-				player.Reposition(playerOffCondition);
 			}
 		}
 		if (IsKeyPressed(KEY_SPACE)) {
@@ -242,12 +255,6 @@ void GameScene::Update() {
 					bullets[i]->ResetPosition({ -100.0f, -100.0f, 0.0f });
 					bulletsToRemove.push(bullets[i]);
 				}
-			}
-		}
-
-		if (((int)elapsedSeconds % 5) == 0) {
-			if (isPlayerCollided) {
-				isPlayerCollided = false;
 			}
 		}
 	}
