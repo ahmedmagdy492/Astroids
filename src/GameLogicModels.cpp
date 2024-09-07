@@ -147,6 +147,10 @@ void Astroid::ToggleIsMoving() {
 	isMoving = !isMoving;
 }
 
+Vector3 Astroid::GetAstroidCenterPoint() {
+	return centerPoint;
+}
+
 bool Astroid::IsMoving() const {
 	return isMoving;
 }
@@ -303,4 +307,36 @@ void Bullet::Draw() {
 
 void Bullet::ResetPosition(Vector3 position) {
 	this->position = position;
+}
+
+Saucer::Saucer() {
+	texture = LoadTexture("resources/saucer.png");
+	width = texture.width;
+	height = texture.height;
+	position = { -50.0f, (HEIGHT - (float)height) / 2, 0.0f };
+}
+
+Vector2 Saucer::GetSize() {
+	return { (float)width, (float)height };
+}
+
+Vector3 Saucer::GetPosition() {
+	return position;
+}
+
+void Saucer::ResetPosition(Vector3 newPos) {
+	position = newPos;
+}
+
+void Saucer::Draw() {
+	DrawTexture(texture, position.x, position.y, WHITE);
+}
+
+void Saucer::Move(Vector3 velocity) {
+	Matrix translateMat = MatrixTranslate(velocity.x, velocity.y, velocity.z);
+	position = Vector3Transform(position, translateMat);
+}
+
+Saucer::~Saucer() {
+	UnloadTexture(texture);
 }

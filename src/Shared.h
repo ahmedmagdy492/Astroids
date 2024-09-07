@@ -20,5 +20,8 @@
 
 #define BULLET_POOL_SIZE 100
 #define BULLET_SIZE 5
-#define BULLET_X_SPEED 5.0f
-#define BULLET_Y_SPEED 5.0f
+#define BULLET_X_SPEED 10.0f
+#define BULLET_Y_SPEED 10.0f
+
+
+#define SACUER_SPEED 3.0f

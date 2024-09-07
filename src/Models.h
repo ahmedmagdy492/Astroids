@@ -140,6 +140,8 @@ private:
 	void ArrangePointsPositionsBasedOnCenterPoint();
 
 public:
+	Vector3 GetAstroidCenterPoint();
+
 	Astroid(Vector3 centerPoint);
 
 	Vector3* GetPosition() const;
@@ -160,6 +162,26 @@ public:
 	void ResetCenterPoint(Vector3 newCenterPoint);
 
 	~Astroid();
+};
+
+class Saucer {
+private:
+	Vector3 position;
+	Texture2D texture;
+	int width, height;
+	
+public:
+	Saucer();
+
+	Vector3 GetPosition();
+	void ResetPosition(Vector3 newPos);
+
+	Vector2 GetSize();
+
+	void Draw();
+	void Move(Vector3 velocity);
+
+	~Saucer();
 };
 
 class Scene {
@@ -195,6 +217,7 @@ class GameScene : public Scene {
 private:
 	Player player;
 	SceneManager* sceneManager;
+	std::stack<Astroid*> astroidsPool;
 	std::vector<Astroid*> astroids;
 	std::stack<Astroid*> astroidsToRemove;
 	std::stack<Bullet*> bulletsPool;
@@ -203,15 +226,21 @@ private:
 	double elapsedSeconds = 0.0;
 	bool isPlayerCollided = false;
 	bool isGameOver = false;
+	bool isSaucerOn = false;
 	float shootingAngle;
+
+	Saucer saucer;
 
 	Sound fireSound;
 	Sound thrustSound;
 	Sound bangSmallSound;
 	Sound bangMediumSound;
+	Sound saucerBigSound;
 
 public:
 	GameScene(SceneManager* sceneManager);
+
+	void Generate2Astroids(Astroid* astroid);
 
 	const std::string& GetName() const;
 

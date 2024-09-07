@@ -7,13 +7,17 @@ GameScene::GameScene(SceneManager* sceneManager) : Scene("GameScene") {
 	thrustSound = LoadSound("resources/thrust.wav");
 	bangSmallSound = LoadSound("resources/bangSmall.wav");
 	bangMediumSound = LoadSound("resources/bangMedium.wav");
+	saucerBigSound = LoadSound("resources/saucerBig.wav");
 
 	for (int i = 0; i < ASTROIDS_POOL_SIZE; ++i) {
 		int x = GetRandomValue(MAX_ASTROID_RADIUS - 100.0f, WIDTH + 100.0f);
 		int y = GetRandomValue(-1050.0f, MAX_ASTROID_RADIUS);
 		Vector3 shapeCenterPoint = { (float)x, (float)y, 0.0f };
 		Astroid* astroid = new Astroid(shapeCenterPoint);
-		astroids.push_back(astroid);
+		astroidsPool.push(astroid);
+		if (i < ASTROIDS_SIZE) {
+			astroids.push_back(astroid);
+		}
 	}
 
 	for (int i = 0; i < BULLET_POOL_SIZE; ++i) {
@@ -34,6 +38,27 @@ const std::string& GameScene::GetName() const {
 }
 
 void GameScene::Render() {
+	for (int i = 0; i < bullets.size(); ++i) {
+		Vector3 position = bullets[i]->GetPosition();
+		if (!Utils::IsPositionOffScreen(position, WIDTH, HEIGHT)) {
+			bullets[i]->Draw();
+		}
+	}
+
+	player.Draw();
+
+	for (int i = 0; i < astroids.size(); ++i) {
+		astroids[i]->Draw();
+	}
+
+	DrawUI();
+
+	if (isSaucerOn) {
+ 		saucer.Draw();
+	}
+
+	elapsedSeconds += GetFrameTime();
+
 	while (bulletsToRemove.size() > 0) {
 		Bullet* bullet = bulletsToRemove.top();
 		bulletsToRemove.pop();
@@ -50,25 +75,9 @@ void GameScene::Render() {
 		std::vector<Astroid*>::iterator result = std::find(astroids.begin(), astroids.end(), astroid);
 		if (result != astroids.end()) {
 			astroids.erase(result);
+			astroidsPool.push(astroid);
 		}
 	}
-
-	for (int i = 0; i < bullets.size(); ++i) {
-		Vector3 position = bullets[i]->GetPosition();
-		if (!Utils::IsPositionOffScreen(position, WIDTH, HEIGHT)) {
-			bullets[i]->Draw();
-		}
-	}
-
-	player.Draw();
-
-	for (int i = 0; i < ASTROIDS_SIZE; ++i) {
-		astroids[i]->Draw();
-	}
-
-	elapsedSeconds += GetFrameTime();
-
-	DrawUI();
 
 	if (isGameOver) {
 		const char* gameOverText = "Game Over ";
@@ -111,6 +120,19 @@ void GameScene::ResetScene() {
 
 	while (astroidsToRemove.size() > 0) {
 		astroidsToRemove.pop();
+	}
+}
+
+void GameScene::Generate2Astroids(Astroid* astroid) {
+	Vector3* points = astroid->GetPosition();
+	Vector3 centerPoint = astroid->GetAstroidCenterPoint();
+	for (int i = 0; i < 2; ++i) { 
+		Astroid* clonedAstroid = new Astroid(centerPoint);
+		Vector3 *createAstroidPoints = clonedAstroid->GetPosition();
+		for (int j = 0; j < NO_OF_POINTS_IN_ASTROID; ++j) {
+			createAstroidPoints[j] = points[j];
+		}
+		astroids.push_back(clonedAstroid);
 	}
 }
 
@@ -191,7 +213,7 @@ void GameScene::Update() {
 		}
 
 		// astroids moving
-		for (int i = 0; i < ASTROIDS_SIZE; ++i) {
+		for (int i = 0; i < astroids.size(); ++i) {
 			Vector3* points = astroids[i]->GetPosition();
 			int noOfPointsOutOfRange = 0;
 			astroids[i]->Move({ 0.0f, ASTROID_SPEED, 0.0f });
@@ -230,9 +252,32 @@ void GameScene::Update() {
 			Vector3 dirVec = { cosf(angleInRadians) * BULLET_X_SPEED, sinf(angleInRadians) * BULLET_Y_SPEED, 0.0f };
 			bullets[i]->Move({ dirVec.x * -1, dirVec.y * -1, dirVec.z });
 
+			// check for collision with any passing sauce
+			if (isSaucerOn) {
+				Vector2 saucerSize = saucer.GetSize();
+				Vector3 saucerPos = saucer.GetPosition();
+				Vector3 bulletPos = bullets[i]->GetPosition();
+				Rectangle bulletRec = { bulletPos.x, bulletPos.y, BULLET_SIZE, BULLET_SIZE };
+				Rectangle saucerRec = { saucerPos.x, saucerPos.y, saucerSize.x, saucerSize.y };
+				if (CheckCollisionRecs(bulletRec, saucerRec)) {
+					PlaySound(bangSmallSound);
+					int playerLives = player.GetLivesNo();
+					if (playerLives < 3) {
+						++playerLives;
+						player.SetLivesNo(playerLives);
+					}
+					saucer.ResetPosition({ -50.0f, (HEIGHT - saucerSize.y) / 2, 0.0f });
+					isSaucerOn = false;
+					player.SetScore(player.GetScore() + 10);
+					bulletsToRemove.push(bullets[i]);
+
+					break;
+				}
+			}
+
 			// check for collision with any astroid
 			bool hasBulletCollidedWithAstroid = false;
-			for (int j = 0; j < ASTROIDS_SIZE; ++j) {
+			for (int j = 0; j < astroids.size(); ++j) {
 				if (astroids[j]->IsCollidingWithBullet(bullets[i])) {
 					PlaySound(bangSmallSound);
 					player.SetScore(player.GetScore() + 1);
@@ -257,6 +302,24 @@ void GameScene::Update() {
 					bulletsToRemove.push(bullets[i]);
 				}
 			}
+		}
+
+		if (isSaucerOn) {
+			PlaySound(saucerBigSound);
+			saucer.Move({ SACUER_SPEED, 0.0f, 0.0f});
+
+			Vector2 saucerSize = saucer.GetSize();
+			Vector3 saucerPos = saucer.GetPosition();
+			if (saucerPos.x > WIDTH) {
+				saucerPos = { -50.0f, (HEIGHT - saucerSize.y) / 2, 0.0f };
+				saucer.ResetPosition(saucerPos);
+				isSaucerOn = false;
+			}
+		}
+
+		unsigned int elapsedSecondsInt = (unsigned int)round(elapsedSeconds);
+		if (elapsedSecondsInt > 0 && (elapsedSecondsInt % 20) == 0) {
+			isSaucerOn = true;
 		}
 	}
 	else {
@@ -295,6 +358,12 @@ GameScene::~GameScene() {
 	}
 	astroids.clear();
 
+	while(astroidsPool.size() > 0) {
+		Astroid* astroid = astroidsPool.top();
+		astroidsPool.pop();
+		delete astroid;
+	}
+
 	for (int i = 0; i < bulletsPool.size(); ++i) {
 		delete bulletsPool.top();
 		bulletsPool.pop();
@@ -308,6 +377,7 @@ GameScene::~GameScene() {
 	UnloadSound(thrustSound);
 	UnloadSound(bangSmallSound);
 	UnloadSound(bangMediumSound);
+	UnloadSound(saucerBigSound);
 }
 
 MenuScene::MenuScene(SceneManager* sceneManager) : Scene("MenuScene"), sceneManager(sceneManager) {
