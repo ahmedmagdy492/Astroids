@@ -75,7 +75,11 @@ void GameScene::Render() {
 		std::vector<Astroid*>::iterator result = std::find(astroids.begin(), astroids.end(), astroid);
 		if (result != astroids.end()) {
 			astroids.erase(result);
-			astroidsPool.push(astroid);
+			int x = GetRandomValue(MAX_ASTROID_RADIUS - 100.0f, WIDTH + 100.0f);
+			int y = GetRandomValue(-1050.0f, MAX_ASTROID_RADIUS);
+			Vector3 shapeCenterPoint = { (float)x, (float)y, 0.0f };
+			astroid->ResetCenterPoint(shapeCenterPoint);
+			astroids.push_back(astroid);
 		}
 	}
 
@@ -95,13 +99,38 @@ void GameScene::ResetScene() {
 	elapsedSeconds = 0.0;
 	isPlayerCollided = false;
 	shootingAngle = 90.0f;
-	player.ResetState(); 
+	player.ResetState();
 
-	for (int i = 0; i < astroids.size(); ++i) {
+
+	while (astroidsToRemove.size() > 0) {
+		Astroid* astroid = astroidsToRemove.top();
+		astroidsToRemove.pop();
+		astroidsPool.push(astroid);
+	}
+
+	std::stack<Astroid*> tempList;
+
+	while (astroidsPool.size() > 0) {
+		Astroid* astroid = astroidsPool.top();
+		astroidsPool.pop();
 		int x = GetRandomValue(MAX_ASTROID_RADIUS - 100.0f, WIDTH + 100.0f);
 		int y = GetRandomValue(-1050.0f, MAX_ASTROID_RADIUS);
 		Vector3 shapeCenterPoint = { (float)x, (float)y, 0.0f };
-		astroids[i]->ResetCenterPoint(shapeCenterPoint);
+		astroid->ResetCenterPoint(shapeCenterPoint);
+		tempList.push(astroid);
+	}
+
+	astroids.clear();
+
+	int i = 0;
+	while (tempList.size() > 0) {
+		Astroid* astroid = tempList.top();
+		tempList.pop();
+		astroidsPool.push(astroid);
+		if (i < ASTROIDS_SIZE) {
+			astroids.push_back(astroid);
+			++i;
+		}
 	}
 
 	for (int i = 0; i < bullets.size(); ++i) {
@@ -116,10 +145,6 @@ void GameScene::ResetScene() {
 
 	while (bulletsToRemove.size() > 0) {
 		bulletsToRemove.pop();
-	}
-
-	while (astroidsToRemove.size() > 0) {
-		astroidsToRemove.pop();
 	}
 
 	if (isSaucerOn) {
